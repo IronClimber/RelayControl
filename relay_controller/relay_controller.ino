@@ -37,6 +37,7 @@ unsigned long long last_display_time = millis();
 unsigned long long last_control_time = millis();
 unsigned long long last_tune_time = millis();
 unsigned long long last_params_time = millis();
+unsigned long long last_update_encoders = millis();
 
 unsigned long long current_time = millis();
 
@@ -97,10 +98,15 @@ void display_duration(void) {
 
 //-------ENCODERS--------
 
+void check_rotatry();
+
 #define BUFFER_SIZE 3
 
 int encoder_pin_a = 2;
 int encoder_pin_b = 3;
+
+int previous_a;
+int previous_b;
 
 int buf = 0;
 int pos = 0;
@@ -130,6 +136,14 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   current_time = millis();
+  if(current_time - last_update_encoders > 10) {
+    check_rotary();
+
+    previous_a = digitalRead(encoder_pin_a);
+    previous_b = digitalRead(encoder_pin_b);
+
+    last_update_encoders = millis();
+  }
   if(current_time - last_display_time > 1000) {
     tm1637.display(0,mode);
     if(mode == MODE_TIME) {
@@ -215,5 +229,44 @@ void encoderRead(void) {
       }
     }
 
+  }
+}
+
+void check_rotary() {
+
+  if((previous_a == 0) && (previous_b == 1)) {
+    if ((digitalRead(encoder_pin_a) == 1) && (digitalRead(encoder_pin_b) == 0)) {
+      pos++;
+    }
+    if ((digitalRead(encoder_pin_a) == 1) && (digitalRead(encoder_pin_b) == 1)) {
+      pos--;
+    }
+  }
+
+  if((previous_a == 1) && (previous_b == 0)) {
+    if ((digitalRead(encoder_pin_a) == 0) && (digitalRead(encoder_pin_b) == 1)) {
+      pos++;
+    }
+    if ((digitalRead(encoder_pin_a) == 0) && (digitalRead(encoder_pin_b) == 0)) {
+      pos--;
+    }
+  }
+
+  if((previous_a == 1) && (previous_b == 1)) {
+    if ((digitalRead(encoder_pin_a) == 0)  && (digitalRead(encoder_pin_b) == 1)) {
+      pos++;
+    }
+    if ((digitalRead(encoder_pin_a) == 0) && (digitalRead(encoder_pin_b) == 0)) {
+      pos--;
+    }
+  }
+
+  if((previous_a == 0) && (previous_b == 0)) {
+    if ((digitalRead(encoder_pin_a) == 1) && (digitalRead(encoder_pin_b) == 0)) {
+      pos++;
+    }
+    if ((digitalRead(encoder_pin_a) == 1) && (digitalRead(encoder_pin_b) == 1)) {
+      pos--;
+    }
   }
 }
